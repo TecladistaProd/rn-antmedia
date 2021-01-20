@@ -2,7 +2,7 @@
 Essential SDK to use antmedia with React native.
 
 # Table of content
-1. [What is React Native AntMedia?](#1-what-is-react-native-antmedia)
+1. [What is RN AntMedia?](#1-what-is-rn-antmedia)
 2. [Getting Started](#2-getting-started)
 3. [Using](#3-using)
 4. [Hook Parameters](#4-hook-parameters)
@@ -10,9 +10,9 @@ Essential SDK to use antmedia with React native.
 6. [Help this project](#6-help-this-project)
 
 
-## 1. What is React Native AntMedia?
+## 1. What is RN AntMedia?
 
-React Native AntMedia is an port of web sdk of antmedia webrtc_adaptor to react-native using react-native-webrtc. Some functionalities is equal but others is an approach but have some differences.
+RN AntMedia is an port of web sdk of antmedia webrtc_adaptor to react-native using react-native-webrtc. Some functionalities is equal but others is an approach but have some differences.
 > Some functionalities is under development.
 
 
@@ -21,11 +21,11 @@ React Native AntMedia is an port of web sdk of antmedia webrtc_adaptor to react-
 To use in your react-native projects, should be in **pure** react-native. And you need to install [react-native-webrtc](https://github.com/react-native-webrtc/react-native-webrtc) too.
 **npm**
 ```bash
-	npm i react-native-antmedia react-native-webrtc
+	npm i rn-antmedia react-native-webrtc
 ```
 **yarn**
 ```bash
-	yarn add react-native-antmedia react-native-webrtc
+	yarn add rn-antmedia react-native-webrtc
 ```
 
 
@@ -36,7 +36,7 @@ import React, { useState, useRef, useCallback } from 'react';
 import {SafeAreaView, Button} from 'react-native';
 import {RTCView} from 'react-native-webrtc';
 /* importing lib */
-import { useAntMedia } from 'react-native-antmedia';
+import { useAntMedia } from 'rn-antmedia';
 
 const App = () => {
 	const [localStream, setLocalStream] = useState('');

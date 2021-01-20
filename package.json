@@ -1,10 +1,10 @@
 {
-  "name": "react-native-antmedia",
+  "name": "rn-antmedia",
   "version": "1.0.0-beta",
   "description": "Port of webrtc-adaptor (AntMedia) to react-native using react-native-webrtc",
   "source": "src/index.ts",
   "main": "dist/index.js",
-  "module": "dist/react-native-antmedia.esm.js",
+  "module": "dist/rn-antmedia.esm.js",
   "typings": "dist/index.d.ts",
   "files": [
     "dist"
@@ -29,7 +29,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/TecladistaProd/react-native-antmedia"
+    "url": "https://github.com/TecladistaProd/rn-antmedia"
   },
   "keywords": [
     "JavaScript",
