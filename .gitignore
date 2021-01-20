@@ -1,0 +1,10 @@
+# paths to gitignore
+
+/node_modules
+/dist
+/storybook-static
+/.rts2*
+
+# files to ignore
+
+yarn-error.log
