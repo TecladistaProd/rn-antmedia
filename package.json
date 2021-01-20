@@ -1,6 +1,6 @@
 {
   "name": "rn-antmedia",
-  "version": "1.0.0-beta",
+  "version": "1.0.1-beta",
   "description": "Port of webrtc-adaptor (AntMedia) to react-native using react-native-webrtc",
   "source": "src/index.ts",
   "main": "dist/index.js",
@@ -66,18 +66,17 @@
     "prettier": "^2.2.1",
     "react": "^17.0.1",
     "react-native": "^0.63.4",
+    "react-native-webrtc": "^1.87.3",
     "sucrase": "^3.17.0",
     "ts-loader": "^8.0.14",
     "tsconfig-paths": "^3.9.0",
     "tsdx": "0.11.0",
     "typescript": "^4.1.3"
   },
-  "dependencies": {
-    "react-native-webrtc": "^1.87.3"
-  },
+  "dependencies": {},
   "peerDependencies": {
-    "react": ">=16",
-    "react-dom": ">=16",
-    "react-native": "^0.63.4"
+    "react": "^17.0.1",
+    "react-native": "^0.63.4",
+    "react-native-webrtc": "^1.87.3"
   }
 }
