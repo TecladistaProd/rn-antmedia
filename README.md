@@ -12,13 +12,14 @@ Essential SDK to use antmedia with React native.
 
 ## 1. What is RN AntMedia?
 
-RN AntMedia is an port of web sdk of antmedia webrtc_adaptor to react-native using react-native-webrtc. Some functionalities is equal but others is an approach but have some differences.
-> Some functionalities is under development.
+RN AntMedia is an port of web sdk of antmedia webrtc_adaptor to react-native using [react-native-webrtc](https://github.com/react-native-webrtc/react-native-webrtc). Some functionalities still the same but others have some differences.
+> Some functionalities are under development.
 
 
 ## 2. Getting Started
 
-To use in your react-native projects, should be in **pure** react-native. And you need to install [react-native-webrtc](https://github.com/react-native-webrtc/react-native-webrtc) too.
+> NOTE for Expo users: this plugin doesn't work unless you eject since you need to install [react-native-webrtc](https://github.com/react-native-webrtc/react-native-webrtc) too.
+
 **npm**
 ```bash
 	npm i rn-antmedia react-native-webrtc
@@ -28,8 +29,7 @@ To use in your react-native projects, should be in **pure** react-native. And yo
 	yarn add rn-antmedia react-native-webrtc
 ```
 
-
-## 3. Using
+## 3. Usage
 
 ```jsx
 import React, { useState, useRef, useCallback } from 'react';
@@ -164,9 +164,9 @@ const App = () => {
 ```
 
 
-## 4. Hook Parameters
+## 4. Hooks Parameters
 
-When you call hook function, you need to pass some of this params to work, by default the hook will start getUserMedia with __mediaConstraints__.
+When you call a hook function, you need to pass some of this params to work, by default the hook will start getUserMedia with __mediaConstraints__.
 
 > Params with __*__ is mandatory acctually
 
