@@ -208,7 +208,7 @@ function useAntMedia(params: Params) {
                   try {
                     await changeBandwidth(bandwidth.value, streamId);
                   } catch (e) {
-                    console.error(e);
+                    // console.error(e);
                   }
                 })();
               }
