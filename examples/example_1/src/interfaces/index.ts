@@ -1,4 +1,4 @@
-import { MutableRefObject } from 'react';
+import {MutableRefObject} from 'react';
 import {
   MediaStream,
   RTCOfferOptions,
@@ -18,17 +18,16 @@ export interface Params {
   callbackError?: (errorMessage: string, data?: any) => void;
   peerconnection_config?: RTCPeerConnectionConfiguration;
   bandwidth?: number;
-  debug?: boolean;
 }
 
-export type CustomWebSocket = WebSocket & { sendJson: (dt: any) => void };
+export type CustomWebSocket = WebSocket & {sendJson: (dt: any) => void};
 
 export interface Socket {
   ws: null | CustomWebSocket;
 }
 
 export interface RemoteStreams {
-  [key: string]: MediaStream;
+  [key: string]: MediaStream[];
 }
 
 export interface RemotePeerConnection {
@@ -40,7 +39,7 @@ export interface RemoteDescriptionSet {
 }
 
 export interface RemotePeerConnectionStats {
-  [key: string]: { timerId: number };
+  [key: string]: {timerId: number};
 }
 
 export interface IceCandidateList {
@@ -77,10 +76,7 @@ export interface Adaptor {
     | 'have-remote-pranswer'
     | 'closed'
     | null;
-  initPeerConnection: (
-    streamId: string,
-    dataChannelMode: 'publish' | 'play' | 'peer',
-  ) => Promise<void>;
+  initPeerConnection: (streamId: string) => Promise<void>;
   handleTurnVolume: () => void;
   handleTurnCamera: () => void;
   isTurnedOf: boolean;

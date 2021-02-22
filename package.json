@@ -1,6 +1,6 @@
 {
   "name": "rn-antmedia",
-  "version": "1.0.2-beta",
+  "version": "1.1.0-beta",
   "description": "Port of webrtc-adaptor (AntMedia) to react-native using react-native-webrtc",
   "source": "src/index.ts",
   "main": "dist/index.js",
@@ -22,6 +22,7 @@
   "scripts": {
     "prebuild": "sucrase-node scripts/prebuild.ts",
     "build": "cross-env NODE_ENV=production tsdx build",
+    "watch": "cross-env NODE_ENV=development tsdx watch",
     "postbuild": "sucrase-node scripts/postbuild.ts",
     "commit": "git add . && git-cz",
     "deploy": "yarn commit",

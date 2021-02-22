@@ -9,6 +9,7 @@ import {
   EventOnCandidate,
   RTCSessionDescriptionType,
   RTCIceCandidateType,
+  EventOnAddStream,
 } from 'react-native-webrtc';
 
 import {
@@ -34,6 +35,7 @@ function useAntMedia(params: Params) {
     sdp_constraints,
     peerconnection_config,
     bandwidth: bwh,
+    debug,
   } = params;
   const [roomName, setRoomName] = useState('');
   const [isMuted, setIsMuted] = useState(false);
@@ -56,24 +58,31 @@ function useAntMedia(params: Params) {
   const adaptorRef = useRef<null | Adaptor>(null);
 
   const closePeerConnection = useCallback((streamId: string) => {
-    if (
-      remotePeerConnection[streamId] != null &&
-      remotePeerConnection[streamId].signalingState !== 'closed'
-    ) {
-      remotePeerConnection[streamId].close();
+    if (remotePeerConnection[streamId] != null) {
+      // if(remotePeerConnection[streamId].dataChannel != null) remotePeerConnection[streamId].dataChannel.close();
 
-      // @ts-ignore;
-      remotePeerConnection[streamId] = null;
-
-      delete remotePeerConnection[streamId];
-      const playStreamIndex = playStreamIds.indexOf(streamId);
-      setRemoteStreams(sm => {
-        const obj = { ...sm };
-        delete obj[streamId];
-        return obj;
+      setRemoteStreams(value => {
+        const val = { ...value };
+        const streams = [...remotePeerConnection[streamId].getLocalStreams()];
+        streams.forEach(stream => {
+          if (localStream.current?.toURL() !== stream.toURL()) {
+            delete val[stream.toURL()];
+          }
+        });
+        return val;
       });
-      if (playStreamIndex !== -1) {
-        playStreamIds.splice(playStreamIndex, 1);
+
+      if (remotePeerConnection[streamId].signalingState !== 'closed') {
+        remotePeerConnection[streamId].close();
+        // @ts-ignore;
+        remotePeerConnection[streamId] = null;
+
+        delete remotePeerConnection[streamId];
+        const playStreamIndex = playStreamIds.indexOf(streamId);
+
+        if (playStreamIndex !== -1) {
+          playStreamIds.splice(playStreamIndex, 1);
+        }
       }
     }
 
@@ -84,16 +93,23 @@ function useAntMedia(params: Params) {
   }, []);
 
   const getVideoSender = useCallback((streamId: string) => {
-    console.log('getVideoSender');
     let videoSender = null;
     const senders: Sender[] = [];
 
     const rmS = remotePeerConnection[streamId].getRemoteStreams();
 
-    setRemoteStreams(rm => {
-      const obj = { ...rm };
-      obj[streamId] = rmS;
-      return obj;
+    setRemoteStreams(value => {
+      const val = { ...value };
+      const streams = [
+        ...remotePeerConnection[streamId].getLocalStreams(),
+        ...remotePeerConnection[streamId].getRemoteStreams(),
+      ];
+      streams.forEach(stream => {
+        if (localStream.current?.toURL() !== stream.toURL()) {
+          val[stream.toURL()] = stream;
+        }
+      });
+      return val;
     });
 
     rmS.forEach(i => {
@@ -162,10 +178,10 @@ function useAntMedia(params: Params) {
 
   const onTrack = useCallback((event, streamId: string) => {
     if (!remoteStreams[streamId]) {
-      setRemoteStreams(dt => {
-        dt[streamId] = event.streams[0];
-        return dt;
-      });
+      // setRemoteStreams(dt => {
+      //   dt[streamId] = event.streams[0];
+      //   return dt;
+      // });
       const dataObj = {
         track: event.streams[0],
         streamId,
@@ -175,8 +191,9 @@ function useAntMedia(params: Params) {
     }
   }, []);
 
+  // data channel mode can be "publish" , "play" or "peer" based on this it is decided which way data channel is created
   const initPeerConnection = useCallback(
-    async (streamId: string) => {
+    async (streamId: string, dataChannelMode: 'publish' | 'play' | 'peer') => {
       if (remotePeerConnection[streamId] == null) {
         const closedStreamId = streamId;
         remotePeerConnection[streamId] = new RTCPeerConnection(
@@ -195,27 +212,86 @@ function useAntMedia(params: Params) {
           };
           // @ts-ignore
           remotePeerConnection[streamId].ontrack = event => {
-            console.log('onTrack', event);
+            if (debug) console.log('onTrack', event);
             onTrack(event, closedStreamId);
           };
+
+          remotePeerConnection[streamId].onaddstream = (
+            e: EventOnAddStream,
+          ) => {
+            setRemoteStreams(value => {
+              const val = { ...value };
+              const streams = [
+                ...remotePeerConnection[streamId].getLocalStreams(),
+                ...remotePeerConnection[streamId].getRemoteStreams(),
+              ];
+              streams.forEach(stream => {
+                if (localStream.current?.toURL() !== stream.toURL()) {
+                  val[stream.toURL()] = stream;
+                }
+              });
+              return val;
+            });
+          };
+
+          if (dataChannelMode === 'publish') {
+            //open data channel if it's publish mode peer connection
+            const dataChannelOptions = {
+              ordered: true,
+            };
+            const dataChannel = remotePeerConnection[
+              streamId
+            ].createDataChannel(streamId, dataChannelOptions);
+            // initDataChannel(streamId, dataChannel);
+          } else if (dataChannelMode === 'play') {
+            //in play mode, server opens the data channel
+            // Property 'ondatachannel' does not exist on type 'RTCPeerConnection' react-native-webrtc
+            // remotePeerConnection[streamId].ondatachannel = event => {
+            // initDataChannel(streamId, event.channel);
+            // };
+          } else {
+            //for peer mode do both for now
+            const dataChannelOptions = {
+              ordered: true,
+            };
+
+            const dataChannelPeer = remotePeerConnection[
+              streamId
+            ].createDataChannel(streamId, dataChannelOptions);
+            // initDataChannel(streamId, dataChannelPeer);
+
+            // remotePeerConnection[streamId].ondatachannel = function(ev) {
+            //   initDataChannel(streamId, ev.channel);
+            // };
+          }
 
           if (!isPlayMode) {
             remotePeerConnection[
               streamId
             ].oniceconnectionstatechange = event => {
+              if (
+                !event.target.iceConnectionState.match(
+                  /(closed|disconnected|failed)/i,
+                )
+              ) {
+                // console.log(event.target.iceConnectionState);
+                try {
+                  getVideoSender(streamId);
+                } catch (err) {}
+              }
               if (event.target.iceConnectionState === 'connected') {
                 (async () => {
                   try {
                     await changeBandwidth(bandwidth.value, streamId);
                   } catch (e) {
-                    // console.error(e);
+                    if (debug) console.error(e);
                   }
                 })();
               }
             };
           }
         } catch (err) {
-          console.log('initPeerConnectionError', err.message);
+          if (debug) console.error('initPeerConnectionError', err.message);
         }
       }
     },
@@ -237,7 +313,7 @@ function useAntMedia(params: Params) {
 
         if (socket.ws) socket.ws.sendJson(jsCmd);
       } catch (err) {
-        console.log('gotDescriptionError', err);
+        if (debug) console.log('gotDescriptionError', err);
       }
     },
     [],
@@ -246,13 +322,13 @@ function useAntMedia(params: Params) {
   const startPublishing = useCallback(
     async (streamId: string) => {
       try {
-        await initPeerConnection(streamId);
+        await initPeerConnection(streamId, 'publish');
         const configuration = await remotePeerConnection[streamId].createOffer(
           sdp_constraints,
         );
         await gotDescription(configuration, streamId);
       } catch (err) {
-        console.log('startPublishing error', err.message, err.stack);
+        if (debug) console.log('startPublishing error', err.message, err.stack);
       }
     },
     [initPeerConnection],
@@ -374,7 +450,7 @@ function useAntMedia(params: Params) {
   const addIceCandidate = useCallback(
     async (streamId: string, candidate: RTCIceCandidateType) => {
       try {
-        console.debug(`addIceCandidate ${streamId}`);
+        if (debug) console.debug(`addIceCandidate ${streamId}`);
         await remotePeerConnection[streamId].addIceCandidate(candidate);
       } catch (err) {}
     },
@@ -386,8 +462,14 @@ function useAntMedia(params: Params) {
       const streamId = idOfStream;
       const type = typeOfConfiguration;
       const conf = configuration;
+      const isTypeOffer = type === 'offer';
 
-      await initPeerConnection(streamId);
+      let dataChannelMode: 'publish' | 'play' = 'publish';
+      if (isTypeOffer) {
+        dataChannelMode = 'play';
+      }
+
+      await initPeerConnection(streamId, dataChannelMode);
       try {
         const response = await remotePeerConnection[
           streamId
@@ -406,13 +488,24 @@ function useAntMedia(params: Params) {
         }
         iceCandidateList[streamId] = [];
 
-        if (type === 'offer') {
+        if (isTypeOffer) {
           const configur = await remotePeerConnection[streamId].createAnswer(
             sdp_constraints,
           );
           await gotDescription(configur, streamId);
         }
-      } catch (error) {}
+      } catch (error) {
+        if (
+          error.toString().indexOf('InvalidAccessError') > -1 ||
+          error.toString().indexOf('setRemoteDescription') > -1
+        ) {
+          /**
+           * This error generally occurs in codec incompatibility.
+           * AMS for a now supports H.264 codec. This error happens when some browsers try to open it from VP8.
+           */
+          if (callbackError) callbackError('notSetRemoteDescription');
+        }
+      }
     },
     [],
   );
@@ -429,14 +522,15 @@ function useAntMedia(params: Params) {
         sdpMid,
       });
 
-      await initPeerConnection(streamId);
+      await initPeerConnection(streamId, 'peer');
 
       if (remoteDescriptionSet[streamId] === true) {
         await addIceCandidate(streamId, candidate);
       } else {
-        console.debug(
-          'Ice candidate is added to list because remote description is not set yet',
-        );
+        if (debug)
+          console.debug(
+            'Ice candidate is added to list because remote description is not set yet',
+          );
         const index = iceCandidateList[streamId].findIndex(
           i => JSON.stringify(i) === JSON.stringify(candidate),
         );
@@ -542,6 +636,7 @@ function useAntMedia(params: Params) {
     ws.onerror = error => {
       setConnected(false);
       clearInterval(pingTimerId);
+      if (callbackError) callbackError('Error on connect', error);
     };
 
     ws.onclose = () => {
