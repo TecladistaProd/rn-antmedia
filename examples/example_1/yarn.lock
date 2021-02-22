@@ -6080,10 +6080,10 @@ rimraf@~2.2.6:
   resolved "https://registry.yarnpkg.com/rimraf/-/rimraf-2.2.8.tgz#e439be2aaee327321952730f99a8929e4fc50582"
   integrity sha1-5Dm+Kq7jJzIZUnMPmaiSnk/FBYI=
 
-rn-antmedia@^1.0.2-beta:
-  version "1.0.2-beta"
-  resolved "https://registry.yarnpkg.com/rn-antmedia/-/rn-antmedia-1.0.2-beta.tgz#dc3219a16d9807f9652b4f4aafdc8e685733e1bb"
-  integrity sha512-QEGfTVQHIrZaYqnlphFyJgR/P0a3PY1ozrhY5G6twLCa+EQ23PlejaavTDpffOcpVp4dqa6DB74GgT8IH9tLVA==
+rn-antmedia@*:
+  version "1.1.0-beta"
+  resolved "https://registry.yarnpkg.com/rn-antmedia/-/rn-antmedia-1.1.0-beta.tgz#17fb3430b26b85cdfd891776c4d01e16852a6a8f"
+  integrity sha512-zk/ECFikhQg04Ya8BcPd48nzziMwoHT/kuty6c/sTjasOFAvJdlD0DxFUb56OZew5lMb3tutfRjf+2p6CuTErw==
 
 rsvp@^4.8.4:
   version "4.8.5"

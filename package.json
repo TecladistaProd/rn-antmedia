@@ -26,7 +26,7 @@
     "postbuild": "sucrase-node scripts/postbuild.ts",
     "commit": "git add . && git-cz",
     "deploy": "yarn commit",
-    "postdeploy": "git push origin master"
+    "postdeploy": "git push origin main"
   },
   "repository": {
     "type": "git",
