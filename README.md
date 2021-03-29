@@ -48,6 +48,7 @@ When you call a hook function, you need to pass some of this params to work, by 
 - *__sdp_constraints__: object with constraints to RTCSessionDescription (react-native-webrtc)
 - __peerconnection_config__: object with peerconnection configurartion (react-native-webrtc)
 -__debug__: boolean to show some messages on the console as some catch errors in the lib, false by default.
+-__onlyDataChannel__: boolean to init only in dataChannel mode.
 - *__bandwidth__: object with bandwidth config number or string example 300 or "unlimited"
 - __callback__: callback function when some event is fired by antmedia server by websocket
 	- __callback(this, message, data)__
@@ -67,16 +68,18 @@ When you call a hook function, you need to pass some of this params to work, by 
 > Params with __*__ is mandatory
 
 - __publish(*streamId, token)__: based on publish by antmedia webrtcAdaptor
-- __joinRoom(*room, streamId)__: based on publish by antmedia webrtcAdaptor
-- __leaveFromRoom(room: string)__: based on publish by antmedia webrtcAdaptor
-- __join(*streamId)__: based on publish by antmedia webrtcAdaptor
-- __leave(*streamId)__: based on publish by antmedia webrtcAdaptor
-- __play(*streamId, token, room)__: based on publish by antmedia webrtcAdaptor
-- __stop(*streamId)__: based on publish by antmedia webrtcAdaptor
+- __joinRoom(*room, streamId)__: based on joinRoom by antmedia webrtcAdaptor
+- __leaveFromRoom(room: string)__: based on leaveFromRoom by antmedia webrtcAdaptor
+- __join(*streamId)__: based on join by antmedia webrtcAdaptor
+- __leave(*streamId)__: based on leave by antmedia webrtcAdaptor
+- __play(*streamId, token, room)__: based on play by antmedia webrtcAdaptor
+- __stop(*streamId)__: based on stop by antmedia webrtcAdaptor
+- __peerMessage(*streamId, *definition, *data)__: based on peerMessage by antmedia webrtcAdaptor
+- __sendData(*streamId, *message)__: based on sendData by antmedia webrtcAdaptor
 - __localStream__: this is local stream when the hook is started
 - __remoteStreams__: this is object with remote streams when have connection between peers.
 - __getUserMedia(*mediaConstrants)__: based on getUserMedia (react-native-webrtc)
-- __getStreamInfo(*streamId)__: based on publish by antmedia webrtcAdaptor
+- __getStreamInfo(*streamId)__: based on getStreamInfo by antmedia webrtcAdaptor
 - __signallingState(*streamId)__: this function return the signalling state of the gived stream id
 - __initPeerConnection(*streamId)__: funcion to initPeerConnection between the stream id and the user
 - __handleTurnVolume()__: function to turn on/off the volume (by default is turned on)

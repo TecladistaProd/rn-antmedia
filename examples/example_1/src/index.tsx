@@ -4,6 +4,7 @@ import styled from 'styled-components/native';
 
 import Room from './views/Room';
 import Peer from './views/Peer';
+import Chat from './views/Chat';
 
 const SafeArea = styled.SafeAreaView`
   flex: 1;
@@ -18,7 +19,8 @@ const src: React.FC = () => {
     <SafeArea>
       <NativeRouter>
         <Container>
-          <Route exact path="/" component={Peer} />
+          <Route exact path="/peer" component={Peer} />
+          <Route exact path="/" component={Chat} />
         </Container>
       </NativeRouter>
     </SafeArea>

@@ -36,6 +36,7 @@ function useAntMedia(params: Params) {
     peerconnection_config,
     bandwidth: bwh,
     debug,
+    onlyDataChannel,
   } = params;
   const [roomName, setRoomName] = useState('');
   const [isMuted, setIsMuted] = useState(false);
@@ -59,7 +60,10 @@ function useAntMedia(params: Params) {
 
   const closePeerConnection = useCallback((streamId: string) => {
     if (remotePeerConnection[streamId] != null) {
-      // if(remotePeerConnection[streamId].dataChannel != null) remotePeerConnection[streamId].dataChannel.close();
+      // @ts-ignore
+      if (remotePeerConnection[streamId].dataChannel != null)
+        // @ts-ignore
+        remotePeerConnection[streamId].dataChannel.close();
 
       setRemoteStreams(value => {
         const val = { ...value };
@@ -239,16 +243,17 @@ function useAntMedia(params: Params) {
             const dataChannelOptions = {
               ordered: true,
             };
-            const dataChannel = remotePeerConnection[
+            const dataChannelPeer = remotePeerConnection[
               streamId
             ].createDataChannel(streamId, dataChannelOptions);
-            // initDataChannel(streamId, dataChannel);
+            initDataChannel(streamId, dataChannelPeer);
           } else if (dataChannelMode === 'play') {
             //in play mode, server opens the data channel
             // Property 'ondatachannel' does not exist on type 'RTCPeerConnection' react-native-webrtc
-            // remotePeerConnection[streamId].ondatachannel = event => {
-            // initDataChannel(streamId, event.channel);
-            // };
+            // @ts-ignore
+            remotePeerConnection[streamId].ondatachannel = event => {
+              initDataChannel(streamId, event.channel);
+            };
           } else {
             //for peer mode do both for now
             const dataChannelOptions = {
@@ -258,11 +263,12 @@ function useAntMedia(params: Params) {
             const dataChannelPeer = remotePeerConnection[
               streamId
             ].createDataChannel(streamId, dataChannelOptions);
-            // initDataChannel(streamId, dataChannelPeer);
+            initDataChannel(streamId, dataChannelPeer);
 
-            // remotePeerConnection[streamId].ondatachannel = function(ev) {
-            //   initDataChannel(streamId, ev.channel);
-            // };
+            // @ts-ignore
+            remotePeerConnection[streamId].ondatachannel = (ev: any) => {
+              initDataChannel(streamId, ev.channel);
+            };
           }
 
           if (!isPlayMode) {
@@ -297,6 +303,43 @@ function useAntMedia(params: Params) {
     },
     [isPlayMode, localStream],
   );
+
+  const initDataChannel = useCallback((streamId: string, dataChannel: any) => {
+    dataChannel.onerror = (error: any) => {
+      // console.log("Data Channel Error:", error );
+      const obj = {
+        streamId: streamId,
+        error: error,
+      };
+      // console.log("channel status: ", dataChannel.readyState);
+      if (dataChannel.readyState !== 'closed' && callbackError) {
+        callbackError('data_channel_error', obj);
+      }
+    };
+
+    dataChannel.onmessage = (event: any) => {
+      const obj = {
+        streamId: streamId,
+        event: event,
+      };
+      if (callback && adaptorRef.current)
+        callback.call(adaptorRef.current, 'data_received', obj);
+    };
+
+    dataChannel.onopen = () => {
+      // @ts-ignore
+      remotePeerConnection[streamId].dataChannel = dataChannel;
+      // console.log("Data channel is opened");
+      if (callback && adaptorRef.current)
+        callback.call(adaptorRef.current, 'data_channel_opened', streamId);
+    };
+
+    dataChannel.onclose = () => {
+      // console.log("Data channel is closed");
+      if (callback && adaptorRef.current)
+        callback.call(adaptorRef.current, 'data_channel_closed', streamId);
+    };
+  }, []);
 
   const gotDescription = useCallback(
     async (configuration: RTCSessionDescriptionType, streamId: string) => {
@@ -339,18 +382,53 @@ function useAntMedia(params: Params) {
     if (typeof stream !== 'boolean') localStream.current = stream;
   }, []);
 
-  const publish = useCallback((streamId: string, token?: string) => {
-    if (!localStream.current) return;
-    const data = {
-      command: 'publish',
-      streamId,
-      token,
-      video: localStream.current.getVideoTracks().length > 0,
-      audio: localStream.current.getAudioTracks().length > 0,
-    };
+  const publish = useCallback(
+    (
+      streamId: string,
+      token?: string,
+      subscriberId?: string,
+      subscriberCode?: string,
+    ) => {
+      let data = {} as any;
+      if (onlyDataChannel) {
+        data = {
+          command: 'publish',
+          streamId: streamId,
+          token: token,
+          subscriberId: typeof subscriberId !== undefined ? subscriberId : '',
+          subscriberCode:
+            typeof subscriberCode !== undefined ? subscriberCode : '',
+          video: false,
+          audio: false,
+        };
+      } else {
+        if (localStream.current) return;
 
-    if (socket.ws) socket.ws.sendJson(data);
-  }, []);
+        let [video, audio] = [false, false];
+
+        if (localStream.current) {
+          // @ts-ignore
+          video = localStream.current.getVideoTracks().lengh > 0;
+          // @ts-ignore
+          audio = localStream.current.getAudioTracks().lengh > 0;
+        }
+
+        data = {
+          command: 'publish',
+          streamId,
+          token,
+          subscriberId: typeof subscriberId !== undefined ? subscriberId : '',
+          subscriberCode:
+            typeof subscriberCode !== undefined ? subscriberCode : '',
+          video,
+          audio,
+        };
+      }
+
+      if (socket.ws) socket.ws.sendJson(data);
+    },
+    [],
+  );
 
   const joinRoom = useCallback((room: string, streamId?: string) => {
     const data = {
@@ -550,6 +628,25 @@ function useAntMedia(params: Params) {
     [],
   );
 
+  const peerMessage = useCallback(
+    (streamId: string, definition: any, data: any) => {
+      const jsCmd = {
+        command: 'peerMessageCommand',
+        streamId: streamId,
+        definition: definition,
+        data: data,
+      };
+      if (socket.ws) socket.ws.sendJson(jsCmd);
+    },
+    [],
+  );
+
+  const sendData = useCallback((streamId: string, message: string) => {
+    // @ts-ignore
+    const dataChannel = remotePeerConnection[streamId].dataChannel;
+    dataChannel.send(message);
+  }, []);
+
   const signallingState = useCallback((streamId: string) => {
     if (remotePeerConnection[streamId] != null) {
       return remotePeerConnection[streamId].signalingState;
@@ -561,7 +658,8 @@ function useAntMedia(params: Params) {
     if (
       !isPlayMode &&
       typeof mediaConstraints !== 'undefined' &&
-      localStream.current == null
+      localStream.current == null &&
+      !onlyDataChannel
     ) {
       await getUserMedia(mediaConstraints);
     }
@@ -673,6 +771,8 @@ function useAntMedia(params: Params) {
       handleTurnCamera,
       isTurnedOf,
       isMuted,
+      peerMessage,
+      sendData,
       // closePeerConnection
     };
   }, [connected]);
@@ -697,6 +797,8 @@ function useAntMedia(params: Params) {
         handleTurnCamera,
         isTurnedOf,
         isMuted,
+        peerMessage,
+        sendData,
         // closePeerConnection
       } as Adaptor);
 }

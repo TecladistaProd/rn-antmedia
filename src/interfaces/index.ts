@@ -19,6 +19,7 @@ export interface Params {
   peerconnection_config?: RTCPeerConnectionConfiguration;
   bandwidth?: number;
   debug?: boolean;
+  onlyDataChannel?: boolean;
 }
 
 export type CustomWebSocket = WebSocket & { sendJson: (dt: any) => void };
@@ -85,4 +86,6 @@ export interface Adaptor {
   handleTurnCamera: () => void;
   isTurnedOf: boolean;
   isMuted: boolean;
+  peerMessage: (streamId: string, definition: any, data: any) => void;
+  sendData: (streamId: string, message: string) => void;
 }
