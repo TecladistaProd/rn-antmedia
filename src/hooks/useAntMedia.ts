@@ -402,16 +402,14 @@ function useAntMedia(params: Params) {
           audio: false,
         };
       } else {
-        if (localStream.current) return;
+        if (!localStream.current) return;
 
         let [video, audio] = [false, false];
 
-        if (localStream.current) {
-          // @ts-ignore
-          video = localStream.current.getVideoTracks().lengh > 0;
-          // @ts-ignore
-          audio = localStream.current.getAudioTracks().lengh > 0;
-        }
+        // @ts-ignore
+        video = localStream.current.getVideoTracks().length > 0;
+        // @ts-ignore
+        audio = localStream.current.getAudioTracks().length > 0;
 
         data = {
           command: 'publish',
